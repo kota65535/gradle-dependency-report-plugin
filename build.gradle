@@ -4,7 +4,7 @@ plugins {
     id 'com.gradle.plugin-publish' version '1.1.0'
 }
 
-group = 'com.kota65535.gradle.plugin'
+group = 'io.github.kota65535.gradle.plugin'
 version = "0.0.6-SNAPSHOT"
 
 repositories {
