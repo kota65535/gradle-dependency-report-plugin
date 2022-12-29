@@ -15,6 +15,10 @@ dependencies {
     testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
 }
 
+test {
+    useJUnitPlatform()
+}
+
 pluginBundle {
     website = 'https://github.com/kota65535/gradle-dependency-report-plugin'
     vcsUrl = 'https://github.com/kota65535/gradle-dependency-report-plugin'
@@ -30,19 +34,6 @@ gradlePlugin {
             description = 'Gradle plugin to report project dependencies in JSON format'
         }
     }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = 'localPluginRepository'
-            url = '../local-plugin-repository'
-        }
-    }
-}
-
-test {
-    useJUnitPlatform()
 }
 
 apply from: "release.gradle"
