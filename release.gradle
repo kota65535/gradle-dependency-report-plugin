@@ -1,0 +1,61 @@
+static matchVersion(v) {
+  def matcher = v =~ /^(\d+)\.(\d+)\.(\d+)$/
+  assert matcher.matches(), "Invalid version: ${v}"
+  return matcher
+}
+
+static matchSnapshotVersion(v) {
+  def matcher = v =~ /^(\d+)\.(\d+)\.(\d+)-SNAPSHOT$/
+  assert matcher.matches(), "Invalid snapshot version: ${v}"
+  return matcher
+}
+
+def writeVersionFile(version) {
+  def f = file("build.gradle")
+  def s = f.getText().replaceFirst(/(?m)^(\s*)version\s*=\s*.*/, "\$1version = \"${version}\"")
+  f.setText(s)
+}
+
+task showVersion {
+  description = "Print project version"
+  group = "release"
+  doFirst {
+    println version
+  }
+}
+
+task setReleaseVersion {
+  description = "Set release version by removing SNAPSHOT"
+  group = "release"
+  doFirst {
+    def nextVersion = findProperty('nextVersion')
+    if (nextVersion) {
+      matchVersion(nextVersion)
+      version = nextVersion
+    } else {
+      def matcher = matchSnapshotVersion(version)
+      def (major, minor, patch) = matcher[0][1..3].collect { v -> v as Integer }
+      version = "${major}.${minor}.${patch}"
+    }
+    writeVersionFile(version)
+    println version
+  }
+}
+
+task setDevelopmentVersion {
+  description = "Set next development version by incrementing the patch version and appending SNAPSHOT"
+  group = "release"
+  doFirst {
+    def nextVersion = findProperty('nextVersion')
+    if (nextVersion) {
+      matchVersion(nextVersion)
+      version = "${nextVersion}-SNAPSHOT"
+    } else {
+      def matcher = matchVersion(version)
+      def (major, minor, patch) = matcher[0][1..3].collect { v -> v as Integer }
+      version = "${major}.${minor}.${patch + 1}-SNAPSHOT"
+    }
+    writeVersionFile(version)
+    println version
+  }
+}

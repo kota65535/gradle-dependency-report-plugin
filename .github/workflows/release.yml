@@ -2,11 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        type: string
-        required: true
-        description: Version
         
 jobs:
   get-context:
