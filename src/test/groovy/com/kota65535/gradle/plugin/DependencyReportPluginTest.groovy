@@ -14,7 +14,7 @@ class DependencyReportPluginTest extends Specification {
         buildFile = new File(testProjectDir, 'build.gradle')
         buildFile << """
             plugins {
-                id 'com.kota65535.dependency-report'
+                id 'io.github.kota65535.dependency-report'
             }
         """
     }

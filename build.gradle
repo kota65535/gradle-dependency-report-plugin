@@ -28,7 +28,7 @@ pluginBundle {
 gradlePlugin {
     plugins {
         dependencyReport {
-            id = 'com.kota65535.dependency-report'
+            id = 'io.github.kota65535.dependency-report'
             implementationClass = 'com.kota65535.gradle.plugin.DependencyReportPlugin'
             displayName = 'Gradle dependency report plugin'
             description = 'Gradle plugin to report project dependencies in JSON format'
