@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        required: true
+        description: Version
+        
+jobs:
+  get-context:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 5
+    steps:
+      - name: Show github context object
+        run: echo $JSON
+        env:
+          JSON: ${{ toJSON(github) }}
+  
+  prepare-release:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 5
+    outputs:
+      versions: ${{ steps.release-version.outputs.versions }}
+      commit: ${{ steps.release-version.outputs.commit }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Setup tools
+        uses: ./.github/actions/setup-tools
+      - name: Set release version
+        id: release-version
+        run: |
+          set -x
+          ./gradlew setReleaseVersion
+          git add .
+          version="$(./gradlew -q showVersion)"
+          git tag "${version}"
+          git commit -m "prepare release ${version}"
+          git pull --rebase
+          git push origin HEAD 
+          git push --tags
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+  
+  release:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    needs:
+      - prepare-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.prepare-release.outputs.commit }}
+      - name: Setup tools
+        uses: ./.github/actions/setup-tools
+      - name: Build with Gradle
+        run: ./gradlew clean build publishPlugins
+  
+  prepare-next-development:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 5
+    needs:
+      - prepare-release
+    env:
+      GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Setup tools
+        uses: ./.github/actions/setup-tools
+      - name: Set next development version
+        run: |
+          set -x
+          ./gradlew setDevelopmentVersion
+          git add .
+          git commit -m "prepare for next development iteration"
+          git pull --rebase
+          git push origin HEAD
