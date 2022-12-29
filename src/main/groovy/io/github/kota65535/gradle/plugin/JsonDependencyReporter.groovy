@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kota65535.gradle.plugin
+package io.github.kota65535.gradle.plugin
 
 import org.gradle.api.Project
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionComparator

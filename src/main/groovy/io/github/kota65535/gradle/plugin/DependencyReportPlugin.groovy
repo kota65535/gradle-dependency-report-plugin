@@ -1,4 +1,4 @@
-package com.kota65535.gradle.plugin
+package io.github.kota65535.gradle.plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
