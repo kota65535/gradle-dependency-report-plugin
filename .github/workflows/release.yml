@@ -49,6 +49,9 @@ jobs:
     timeout-minutes: 30
     needs:
       - prepare-release
+    env:
+      GRADLE_PUBLISH_KEY: ${{ secret.GRADLE_PUBLISH_KEY }}
+      GRADLE_PUBLISH_SECRET: ${{ secret.GRADLE_PUBLISH_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
