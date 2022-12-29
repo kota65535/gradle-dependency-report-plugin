@@ -44,3 +44,5 @@ publishing {
 test {
     useJUnitPlatform()
 }
+
+apply from: "release.gradle"
