@@ -1,0 +1,39 @@
+plugins {
+    id 'groovy'
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '1.1.0'
+}
+
+group = 'com.kota65535.gradle.plugin'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+pluginBundle {
+    website = 'https://github.com/kota65535/gradle-dependency-report-plugin'
+    vcsUrl = 'https://github.com/kota65535/gradle-dependency-report-plugin'
+    tags = ['dependencies', 'json']
+}
+
+gradlePlugin {
+    plugins {
+        dependencyReport {
+            id = 'com.kota65535.dependency-report'
+            implementationClass = 'com.kota65535.gradle.plugin.DependencyReportPlugin'
+            displayName = 'Gradle dependency report plugin'
+            description = 'Gradle plugin to report project dependencies in JSON format'
+        }
+    }
+}
+
+apply from: "release.gradle"

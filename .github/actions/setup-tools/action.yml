@@ -1,0 +1,27 @@
+name: Setup tools
+description: Setup tools according to .tool-versions
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get tool versions
+      run: |
+        set -x
+        echo "JAVA_DISTRIBUTION=$(cat .tool-versions | perl -ne 'print $1 if /^java (.*?)-(.*?)\.(.*)$/')" >> $GITHUB_ENV
+        echo "JAVA_MAJOR_VERSION=$(cat .tool-versions | perl -ne 'print $2 if /^java (.*?)-(.*?)\.(.*)$/')" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: ${{ env.JAVA_DISTRIBUTION }}
+        java-version: ${{ env.JAVA_MAJOR_VERSION }}
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    - name: Configure git
+      run: |
+        git config --global user.name "kota65535"
+        git config --global user.email "kota65535@gmail.com"
+      shell: bash

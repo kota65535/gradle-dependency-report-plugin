@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+  pull_request:
+
+jobs:
+  get-context:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 5
+    steps:
+      - name: Show github context object
+        run: echo $JSON
+        env:
+          JSON: ${{ toJSON(github) }}
+  
+  build:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup tools
+        uses: ./.github/actions/setup-tools
+      - name: Build with Gradle
+        run: ./gradlew clean build
