@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'io.github.kota65535.gradle.plugin'
-version = "0.0.7-SNAPSHOT"
+version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
