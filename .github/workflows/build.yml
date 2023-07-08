@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        gradle-version: ['7.3', '7.4', '7.5', '7.6']
+        gradle-version: ['8.0', '8.1', '8.2']
     steps:
       - name: Checkout
         uses: actions/checkout@v3
