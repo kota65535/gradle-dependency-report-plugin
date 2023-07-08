@@ -24,6 +24,25 @@ public class InternalChangeHandler {
         throw new IllegalStateException("createUnresolvableConfigurationResult failed");
     }
 
+    static public <R, T> R handleMethodNameChange(T object, List<String> methodNames) {
+        Method method = null;
+        for (String name: methodNames) {
+            try {
+                method = ConfigurationInternal.class.getMethod(name);
+            } catch (NoSuchMethodException e) {
+                // do nothing
+            }
+        }
+        if (method == null) {
+            throw new NoSuchElementException("method not found %s".formatted(methodNames));
+        }
+        try {
+            return (R) method.invoke(object);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new IllegalArgumentException("failed to call method %s".formatted(method.getName()));
+        }
+    }
+
     private InternalChangeHandler() {
     }
 }

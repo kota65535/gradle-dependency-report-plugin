@@ -4,7 +4,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.ProjectReportsPluginConvention;
 import org.gradle.api.plugins.ReportingBasePlugin;
-import org.gradle.api.plugins.internal.DefaultProjectReportsPluginConvention;
 import org.gradle.internal.deprecation.DeprecationLogger;
 import org.gradle.util.internal.WrapUtil;
 
@@ -22,7 +21,7 @@ public class DependencyReportPlugin implements Plugin<Project> {
     public void apply(final Project project) {
         project.getPluginManager().apply(ReportingBasePlugin.class);
         @SuppressWarnings("deprecation")
-        final ProjectReportsPluginConvention convention = new DefaultProjectReportsPluginConvention(project);
+        final ProjectReportsPluginConvention convention = project.getObjects().newInstance(org.gradle.api.plugins.internal.DefaultProjectReportsPluginConvention.class, project);
         DeprecationLogger.whileDisabled(new Runnable() {
             @Override
             @SuppressWarnings("deprecation")
