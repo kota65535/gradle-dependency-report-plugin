@@ -23,6 +23,13 @@ class DependencyReportPluginTest extends Specification {
         buildFile << """
             plugins {
                 id 'io.github.kota65535.dependency-report'
+                id 'java'
+            }
+            repositories {
+                mavenCentral()
+            }
+            dependencies {
+                implementation "com.google.guava:guava:32.0.1-jre"
             }
         """
         File subDir = new File(testProjectDir, "sub")
@@ -48,10 +55,15 @@ class DependencyReportPluginTest extends Specification {
         def outputFile = new File("${testProjectDir.absolutePath}/build/reports/project/dependencies.json")
         assert outputFile.exists()
         def outputJson = new JsonSlurper().parse(outputFile)
-        assert outputJson.project != null
+        def compileClasspath = outputJson.project.configurations.find { it.name == "compileClasspath" }
+        assert compileClasspath.dependencies.size() == 1
+        assert compileClasspath.dependencies[0].name == "com.google.guava:guava:32.0.1-jre"
+        assert compileClasspath.dependencies[0].resolvable == "RESOLVED"
+        assert compileClasspath.dependencies[0].children.size() == 6
+        assert compileClasspath.moduleInsights.size() == 7
         result.task(":${DependencyReportPlugin.JSON_DEPENDENCY_REPORT}").outcome == TaskOutcome.SUCCESS
     }
-    
+
     def "create dependency report json file with outputFile option"() {
         given:
         buildFile << """
