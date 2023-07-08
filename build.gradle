@@ -31,8 +31,8 @@ gradlePlugin {
     }
 }
 
-apply from: "release.gradle"
-
 javadoc {
     enabled = false
 }
+
+apply from: "release.gradle"
