@@ -163,6 +163,7 @@ class JsonProjectDependencyRenderer {
     }
 
     private boolean canBeResolved(Configuration configuration) {
+        // cf. https://github.com/gradle/gradle/blob/5f4a070a62a31a17438ac998c2b849f4f6892877/subprojects/diagnostics/src/main/java/org/gradle/api/tasks/diagnostics/internal/ConfigurationDetails.java#L41
         boolean isDeprecatedForResolving = ((DeprecatableConfiguration)configuration).isDeprecatedForResolution();
         return configuration.isCanBeResolved() && !isDeprecatedForResolving;
     }
