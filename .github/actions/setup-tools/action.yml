@@ -27,6 +27,7 @@ runs:
       if: ${{ inputs.gradle-version != '' }}
       run: |
         ./gradlew wrapper --gradle-version=${{ inputs.gradle-version }}
+        ./gradlew help
       shell: bash
 
     - name: Configure git
