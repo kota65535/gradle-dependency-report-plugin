@@ -4,6 +4,7 @@ package io.github.kota65535.gradle.plugin;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.UnresolvableConfigurationResult;
+import org.gradle.internal.deprecation.DeprecatableConfiguration;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -32,7 +33,7 @@ public class InternalChangeHandler {
 
     static public boolean configurationInternalIsDeclarableByExtension(ConfigurationInternal configuration) {
         Method method = null;
-        List<String> methodNames = List.of("isDeclarableAgainstByExtension", "isDeclarableByExtension");
+        List<String> methodNames = List.of("isDeclarableByExtension", "isDeclarableAgainstByExtension");
         for (String name: methodNames) {
             try {
                 method = ConfigurationInternal.class.getMethod(name);
@@ -48,6 +49,17 @@ public class InternalChangeHandler {
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new IllegalArgumentException("failed to call method %s".formatted(method.getName()));
         }
+    }
+
+    static public boolean DeprecatableConfigurationIsDeprecatedForResolution(DeprecatableConfiguration configuration) {
+        try {
+            return (boolean) DeprecatableConfiguration.class
+                    .getMethod("isDeprecatedForResolution")
+                    .invoke(configuration);
+        } catch (Exception e) {
+            // do nothing
+        }
+        return configuration.getResolutionAlternatives() != null;
     }
 
     private InternalChangeHandler() {

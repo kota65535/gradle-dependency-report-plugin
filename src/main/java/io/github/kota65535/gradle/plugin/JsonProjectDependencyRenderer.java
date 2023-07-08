@@ -27,8 +27,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.kota65535.gradle.plugin.InternalChangeHandler.configurationInternalIsDeclarableByExtension;
-import static io.github.kota65535.gradle.plugin.InternalChangeHandler.createUnresolvableConfigurationResult;
+import static io.github.kota65535.gradle.plugin.InternalChangeHandler.*;
 
 /**
  * Renderer that emits a JSON tree containing the HTML dependency report structure for a given project. The structure is the following:
@@ -164,7 +163,7 @@ class JsonProjectDependencyRenderer {
 
     private boolean canBeResolved(Configuration configuration) {
         // cf. https://github.com/gradle/gradle/blob/5f4a070a62a31a17438ac998c2b849f4f6892877/subprojects/diagnostics/src/main/java/org/gradle/api/tasks/diagnostics/internal/ConfigurationDetails.java#L41
-        boolean isDeprecatedForResolving = ((DeprecatableConfiguration)configuration).isDeprecatedForResolution();
+        boolean isDeprecatedForResolving = DeprecatableConfigurationIsDeprecatedForResolution((DeprecatableConfiguration)configuration);
         return configuration.isCanBeResolved() && !isDeprecatedForResolving;
     }
 
