@@ -4,31 +4,41 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import groovy.json.JsonBuilder;
 import org.gradle.api.Project;
+import org.gradle.api.Transformer;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.DependencyResult;
-import org.gradle.api.artifacts.result.ResolvedComponentResult;
+import org.gradle.api.artifacts.result.ResolutionResult;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionComparator;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionParser;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme;
-import org.gradle.api.internal.artifacts.result.DefaultResolvedComponentResult;
 import org.gradle.api.reporting.dependencies.internal.StrictDependencyResultSpec;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.diagnostics.internal.ConfigurationDetails;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependency;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableModuleResult;
+import org.gradle.api.tasks.diagnostics.internal.graph.nodes.UnresolvableConfigurationResult;
 import org.gradle.api.tasks.diagnostics.internal.insight.DependencyInsightReporter;
-import org.gradle.internal.Actions;
-import org.gradle.util.GradleVersion;
+import org.gradle.internal.deprecation.DeprecatableConfiguration;
 import org.gradle.util.internal.CollectionUtils;
+import org.gradle.util.GradleVersion;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Renderer that emits a JSON tree containing the dependency report structure for a given project. The structure is the following:
+ * Renderer that emits a JSON tree containing the HTML dependency report structure for a given project. The structure is the following:
  *
  * <pre>
  *     {
@@ -87,7 +97,7 @@ import java.util.stream.Collectors;
  *      }
  * </pre>
  */
-class JsonProjectDependencyRenderer {
+public class JsonProjectDependencyRenderer {
     public JsonProjectDependencyRenderer(VersionSelectorScheme versionSelectorScheme, VersionComparator versionComparator, VersionParser versionParser) {
         this.versionSelectorScheme = versionSelectorScheme;
         this.versionComparator = versionComparator;
@@ -100,26 +110,20 @@ class JsonProjectDependencyRenderer {
      * @param project the project for which the report must be generated
      * @return the generated JSON, as a String
      */
-    public String render(Project project, Set<ConfigurationDetails> configurations) {
+    public String render(Project project) {
         JsonBuilder json = new JsonBuilder();
-        renderProject(project, configurations, json);
+        renderProject(project, json);
         return json.toString();
     }
 
-    /**
-     * Generates the project dependency report structures for each project
-     *
-     * @param projectsWithConfigurations the projects with configurations for which the reports must be generated
-     * @return the generated JSON, as a String
-     */
-    public String render(Map<Project, Set<ConfigurationDetails>> projectsWithConfigurations) {
+    public String render(Set<Project> projects) {
         JsonBuilder json = new JsonBuilder();
-        renderProjects(projectsWithConfigurations, json);
+        renderProjects(projects, json);
         return json.toString();
     }
 
     // Historic note: this class still uses the Groovy JsonBuilder, as it was originally developed as a Groovy class.
-    private void renderProject(Project project, Set<ConfigurationDetails> configurations, JsonBuilder json) {
+    private void renderProject(Project project, JsonBuilder json) {
 
         Map<String, Object> overall = Maps.newLinkedHashMap();
         overall.put("gradleVersion", GradleVersion.current().toString());
@@ -128,24 +132,24 @@ class JsonProjectDependencyRenderer {
         Map<String, Object> projectOut = Maps.newLinkedHashMap();
         projectOut.put("name", project.getName());
         projectOut.put("description", project.getDescription());
-        projectOut.put("configurations", createConfigurations(configurations));
+        projectOut.put("configurations", createConfigurations(project));
         overall.put("project", projectOut);
 
         json.call(overall);
     }
 
-    private void renderProjects(Map<Project, Set<ConfigurationDetails>> projectsWithConfigurations, JsonBuilder json) {
+    private void renderProjects(Set<Project> projects, JsonBuilder json) {
 
         Map<String, Object> overall = Maps.newLinkedHashMap();
         overall.put("gradleVersion", GradleVersion.current().toString());
         overall.put("generationDate", new Date().toString());
 
-        List<Map<String, Object>> projectsOut = projectsWithConfigurations.keySet().stream()
+        List<Map<String, Object>> projectsOut = projects.stream()
                 .map(p -> {
                     Map<String, Object> projectOut = Maps.newLinkedHashMap();
                     projectOut.put("name", p.getName());
                     projectOut.put("description", p.getDescription());
-                    projectOut.put("configurations", createConfigurations(projectsWithConfigurations.get(p)));
+                    projectOut.put("configurations", createConfigurations(p));
                     return projectOut;
                 })
                 .collect(Collectors.toList());
@@ -154,7 +158,23 @@ class JsonProjectDependencyRenderer {
         json.call(overall);
     }
 
-    private List<Map<String, Object>> createConfigurations(Iterable<ConfigurationDetails> configurations) {
+    private List<Configuration> getNonDeprecatedConfigurations(Project project) {
+        List<Configuration> filteredConfigurations = new ArrayList<>();
+        for (Configuration configuration : project.getConfigurations()) {
+            if (!((DeprecatableConfiguration) configuration).isFullyDeprecated()) {
+                filteredConfigurations.add(configuration);
+            }
+        }
+        return filteredConfigurations;
+    }
+
+    private boolean canBeResolved(Configuration configuration) {
+        boolean isDeprecatedForResolving = ((DeprecatableConfiguration) configuration).getResolutionAlternatives() != null;
+        return configuration.isCanBeResolved() && !isDeprecatedForResolving;
+    }
+
+    private List<Map<String, Object>> createConfigurations(Project project) {
+        Iterable<Configuration> configurations = getNonDeprecatedConfigurations(project);
         return CollectionUtils.collect(configurations, configuration -> {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>(4);
             map.put("name", configuration.getName());
@@ -165,18 +185,19 @@ class JsonProjectDependencyRenderer {
         });
     }
 
-    private List<Map<String, Object>> createDependencies(ConfigurationDetails configuration) {
-        if (configuration.isCanBeResolved()) {
-            RenderableDependency root = new RenderableModuleResult(configuration.getResolutionResultRoot().get());
+    private List<Map<String, Object>> createDependencies(Configuration configuration) {
+        if (canBeResolved(configuration)) {
+            ResolutionResult result = configuration.getIncoming().getResolutionResult();
+            RenderableDependency root = new RenderableModuleResult(result.getRoot());
             return createDependencyChildren(root, new HashSet<>());
         } else {
-            return createDependencyChildren(configuration.getUnresolvableResult(), new HashSet<>());
+            return createDependencyChildren(new UnresolvableConfigurationResult(configuration), new HashSet<>());
         }
     }
 
     private List<Map<String, Object>> createDependencyChildren(RenderableDependency dependency, final Set<Object> visited) {
         Iterable<? extends RenderableDependency> children = dependency.getChildren();
-        return CollectionUtils.collect(children, childDependency -> {
+        return CollectionUtils.collect(children, (Transformer<Map<String, Object>, RenderableDependency>) childDependency -> {
             boolean alreadyVisited = !visited.add(childDependency.getId());
             boolean alreadyRendered = alreadyVisited && !childDependency.getChildren().isEmpty();
             String name = replaceArrow(childDependency.getName());
@@ -205,17 +226,18 @@ class JsonProjectDependencyRenderer {
         return null;
     }
 
-    private List<Object> createModuleInsights(final ConfigurationDetails configuration) {
+    private List<Object> createModuleInsights(final Configuration configuration) {
         Iterable<ModuleIdentifier> modules = collectModules(configuration);
         return CollectionUtils.collect(modules, moduleIdentifier -> createModuleInsight(moduleIdentifier, configuration));
     }
 
-    private Set<ModuleIdentifier> collectModules(ConfigurationDetails configuration) {
+    private Set<ModuleIdentifier> collectModules(Configuration configuration) {
         RenderableDependency root;
-        if (configuration.isCanBeResolved()) {
-            root = new RenderableModuleResult(configuration.getResolutionResultRoot().get());
+        if (canBeResolved(configuration)) {
+            ResolutionResult result = configuration.getIncoming().getResolutionResult();
+            root = new RenderableModuleResult(result.getRoot());
         } else {
-            root = configuration.getUnresolvableResult();
+            root = new UnresolvableConfigurationResult(configuration);
         }
         Set<ModuleIdentifier> modules = Sets.newHashSet();
         Set<ComponentIdentifier> visited = Sets.newHashSet();
@@ -237,22 +259,24 @@ class JsonProjectDependencyRenderer {
         }
     }
 
-    private Map<String, Object> createModuleInsight(ModuleIdentifier module, ConfigurationDetails configuration) {
+    private Map<String, Object> createModuleInsight(ModuleIdentifier module, Configuration configuration) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(2);
         map.put("module", module.toString());
-        map.put("insight", createInsight(module, configuration.getName(), configuration.getResolutionResultRoot().get()));
+        map.put("insight", createInsight(module, configuration));
         return map;
     }
 
-    private List<Object> createInsight(ModuleIdentifier module, String configurationName, ResolvedComponentResult incomingResolution) {
+    private List<Object> createInsight(ModuleIdentifier module, final Configuration configuration) {
         final Spec<DependencyResult> dependencySpec = new StrictDependencyResultSpec(module);
 
+        ResolutionResult result = configuration.getIncoming().getResolutionResult();
         final Set<DependencyResult> selectedDependencies = new LinkedHashSet<>();
-        DefaultResolvedComponentResult.eachElement(incomingResolution, Actions.doNothing(), it -> {
+
+        result.allDependencies(it -> {
             if (dependencySpec.isSatisfiedBy(it)) {
                 selectedDependencies.add(it);
             }
-        }, new HashSet<>());
+        });
 
         Collection<RenderableDependency> sortedDeps = new DependencyInsightReporter(versionSelectorScheme, versionComparator, versionParser).convertToRenderableItems(selectedDependencies, false);
         return CollectionUtils.collect(sortedDeps, dependency -> {
@@ -262,20 +286,20 @@ class JsonProjectDependencyRenderer {
             map.put("description", dependency.getDescription());
             map.put("resolvable", dependency.getResolutionState());
             map.put("hasConflict", !name.equals(dependency.getName()));
-            map.put("children", createInsightDependencyChildren(dependency, new HashSet<>(), configurationName));
+            map.put("children", createInsightDependencyChildren(dependency, new HashSet<>(), configuration));
             return map;
         });
     }
 
-    private List<Object> createInsightDependencyChildren(RenderableDependency dependency, final Set<Object> visited, final String configurationName) {
+    private List<Object> createInsightDependencyChildren(RenderableDependency dependency, final Set<Object> visited, final Configuration configuration) {
         Iterable<? extends RenderableDependency> children = dependency.getChildren();
-        return CollectionUtils.collect(children, childDependency -> {
+        return CollectionUtils.collect(children, (Transformer<Object, RenderableDependency>) childDependency -> {
             boolean alreadyVisited = !visited.add(childDependency.getId());
             boolean leaf = childDependency.getChildren().isEmpty();
             boolean alreadyRendered = alreadyVisited && !leaf;
             String childName = replaceArrow(childDependency.getName());
             boolean hasConflict = !childName.equals(childDependency.getName());
-            String name = leaf ? configurationName : childName;
+            String name = leaf ? configuration.getName() : childName;
 
             LinkedHashMap<String, Object> map = new LinkedHashMap<>(6);
             map.put("name", name);
@@ -285,7 +309,7 @@ class JsonProjectDependencyRenderer {
             map.put("isLeaf", leaf);
             map.put("children", Collections.emptyList());
             if (!alreadyRendered) {
-                map.put("children", createInsightDependencyChildren(childDependency, visited, configurationName));
+                map.put("children", createInsightDependencyChildren(childDependency, visited, configuration));
             }
             return map;
         });
