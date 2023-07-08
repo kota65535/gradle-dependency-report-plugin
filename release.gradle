@@ -10,19 +10,15 @@ static matchSnapshotVersion(v) {
   return matcher
 }
 
-def writeVersionFile(version) {
-  def f = file("build.gradle")
-  def s = f.getText().replaceFirst(/(?m)^(\s*)version\s*=\s*.*/, "\$1version = \"${version}\"")
-  f.setText(s)
+ext.readVersionFile = {
+  file("version.txt").text.strip()
 }
 
-task showVersion {
-  description = "Print project version"
-  group = "release"
-  doFirst {
-    println version
-  }
+ext.writeVersionFile = {
+  file("version.txt").text = version
 }
+
+version = readVersionFile()
 
 task setReleaseVersion {
   description = "Set release version by removing SNAPSHOT"
