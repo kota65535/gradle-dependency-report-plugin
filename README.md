@@ -4,7 +4,7 @@ Gradle plugin for dependency reporting in JSON format.
 
 ## Requirements
 
-- Gradle `>= 7.6`
+- Gradle `>= 7.3`
 
 ## Tasks
 

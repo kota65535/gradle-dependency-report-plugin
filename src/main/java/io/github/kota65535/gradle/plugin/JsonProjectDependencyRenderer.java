@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.github.kota65535.gradle.plugin.InternalChangeHandler.createUnresolvableConfigurationResult;
+
 /**
  * Renderer that emits a JSON tree containing the HTML dependency report structure for a given project. The structure is the following:
  *
@@ -191,7 +193,7 @@ public class JsonProjectDependencyRenderer {
             RenderableDependency root = new RenderableModuleResult(result.getRoot());
             return createDependencyChildren(root, new HashSet<>());
         } else {
-            return createDependencyChildren(UnresolvableConfigurationResult.of(configuration), new HashSet<>());
+            return createDependencyChildren(createUnresolvableConfigurationResult(configuration), new HashSet<>());
         }
     }
 
@@ -237,7 +239,7 @@ public class JsonProjectDependencyRenderer {
             ResolutionResult result = configuration.getIncoming().getResolutionResult();
             root = new RenderableModuleResult(result.getRoot());
         } else {
-            root = UnresolvableConfigurationResult.of(configuration);
+            root = createUnresolvableConfigurationResult(configuration);
         }
         Set<ModuleIdentifier> modules = Sets.newHashSet();
         Set<ComponentIdentifier> visited = Sets.newHashSet();
