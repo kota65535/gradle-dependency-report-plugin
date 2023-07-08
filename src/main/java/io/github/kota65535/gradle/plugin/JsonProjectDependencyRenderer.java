@@ -163,7 +163,7 @@ class JsonProjectDependencyRenderer {
     }
 
     private boolean canBeResolved(Configuration configuration) {
-        boolean isDeprecatedForResolving = ((DeprecatableConfiguration) configuration).getResolutionAlternatives() != null;
+        boolean isDeprecatedForResolving = ((DeprecatableConfiguration)configuration).isDeprecatedForResolution();
         return configuration.isCanBeResolved() && !isDeprecatedForResolving;
     }
 
@@ -181,10 +181,12 @@ class JsonProjectDependencyRenderer {
 
     private List<Map<String, Object>> createDependencies(Configuration configuration) {
         if (canBeResolved(configuration)) {
+            System.out.println("Resolved %s".formatted(configuration.getName()));
             ResolutionResult result = configuration.getIncoming().getResolutionResult();
             RenderableDependency root = new RenderableModuleResult(result.getRoot());
             return createDependencyChildren(root, new HashSet<>());
         } else {
+            System.out.println("Not Resolved %s".formatted(configuration.getName()));
             return createDependencyChildren(createUnresolvableConfigurationResult(configuration), new HashSet<>());
         }
     }
