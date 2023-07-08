@@ -2,6 +2,10 @@
 
 Gradle plugin for dependency reporting in JSON format.
 
+## Requirements
+
+- Gradle `>= 7.6`
+
 ## Tasks
 
 ### `jsonDependencyReport`
