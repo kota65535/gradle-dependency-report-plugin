@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 public class InternalChangeHandler {
 
     static public UnresolvableConfigurationResult createUnresolvableConfigurationResult(Configuration configuration) {
+        // >= 7.6
         try {
             return (UnresolvableConfigurationResult) UnresolvableConfigurationResult.class
                     .getMethod("of", Configuration.class)
@@ -33,6 +34,7 @@ public class InternalChangeHandler {
 
     static public boolean configurationInternalIsDeclarableByExtension(ConfigurationInternal configuration) {
         Method method = null;
+        // >= 8.2
         List<String> methodNames = List.of("isDeclarableByExtension", "isDeclarableAgainstByExtension");
         for (String name: methodNames) {
             try {
@@ -52,6 +54,7 @@ public class InternalChangeHandler {
     }
 
     static public boolean DeprecatableConfigurationIsDeprecatedForResolution(DeprecatableConfiguration configuration) {
+        // >= 8.1
         try {
             return (boolean) DeprecatableConfiguration.class
                     .getMethod("isDeprecatedForResolution")
