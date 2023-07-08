@@ -1,24 +1,33 @@
 name: Setup tools
 description: Setup tools according to .tool-versions
 
+inputs:
+  gradle-version:
+    description: gradle version
+
 runs:
   using: "composite"
   steps:
     - name: Get tool versions
-      run: |
-        set -x
-        echo "JAVA_DISTRIBUTION=$(cat .tool-versions | perl -ne 'print $1 if /^java (.*?)-(.*?)\.(.*)$/')" >> $GITHUB_ENV
-        echo "JAVA_MAJOR_VERSION=$(cat .tool-versions | perl -ne 'print $2 if /^java (.*?)-(.*?)\.(.*)$/')" >> $GITHUB_ENV
-      shell: bash
+      uses: kota65535/github-asdf-parse-action@v1
+      id: versions
+      with:
+        java: "^(?<distribution>\\w+)-(?<major>\\d+)"
 
     - name: Setup JDK
       uses: actions/setup-java@v3
       with:
-        distribution: ${{ env.JAVA_DISTRIBUTION }}
-        java-version: ${{ env.JAVA_MAJOR_VERSION }}
+        distribution: ${{ steps.versions.outputs.java-distribution }}
+        java-version: ${{ steps.versions.outputs.java-major }}
 
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
+
+    - name: Gradle version
+      if: ${{ inputs.gradle-version != '' }}
+      run: |
+        ./gradlew wrapper --gradle-version=${{ inputs.gradle-version }}
+      shell: bash
 
     - name: Configure git
       run: |
