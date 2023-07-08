@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'com.google.guava:guava:32.1.1-jre'
     testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
 }
 
@@ -34,6 +35,10 @@ gradlePlugin {
             description = 'Gradle plugin to report project dependencies in JSON format'
         }
     }
+}
+
+javadoc {
+    enabled = false
 }
 
 apply from: "release.gradle"
