@@ -20,6 +20,12 @@ test {
     useJUnitPlatform()
 }
 
+pluginBundle {
+    website = 'https://github.com/kota65535/gradle-dependency-report-plugin'
+    vcsUrl = 'https://github.com/kota65535/gradle-dependency-report-plugin'
+    tags = ['dependencies', 'json']
+}
+
 gradlePlugin {
     plugins {
         dependencyReport {
