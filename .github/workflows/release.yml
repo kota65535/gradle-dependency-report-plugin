@@ -25,7 +25,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: main
           fetch-depth: 0
       - name: Setup tools
         uses: ./.github/actions/setup-tools
@@ -33,7 +32,7 @@ jobs:
         id: release-version
         run: |
           set -x
-          version="$(./gradlew setReleaseVersion)"
+          version="$(./gradlew setReleaseVersion -q)"
           git add .
           git tag "${version}"
           git commit -m "prepare release ${version}"
@@ -44,7 +43,7 @@ jobs:
           echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
   
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     needs:
       - prepare-release
