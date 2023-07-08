@@ -18,7 +18,6 @@ import org.gradle.api.reporting.dependencies.internal.StrictDependencyResultSpec
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependency;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableModuleResult;
-import org.gradle.api.tasks.diagnostics.internal.graph.nodes.UnresolvableConfigurationResult;
 import org.gradle.api.tasks.diagnostics.internal.insight.DependencyInsightReporter;
 import org.gradle.internal.deprecation.DeprecatableConfiguration;
 import org.gradle.util.GradleVersion;
@@ -28,8 +27,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.kota65535.gradle.plugin.InternalChangeHandler.handleMethodNameChange;
-
+import static io.github.kota65535.gradle.plugin.InternalChangeHandler.configurationInternalIsDeclarableByExtension;
 import static io.github.kota65535.gradle.plugin.InternalChangeHandler.createUnresolvableConfigurationResult;
 
 /**
@@ -157,7 +155,7 @@ class JsonProjectDependencyRenderer {
         List<Configuration> filteredConfigurations = new ArrayList<>();
         for (Configuration configuration : project.getConfigurations()) {
             ConfigurationInternal configurationInternal = (ConfigurationInternal)configuration;
-            if (handleMethodNameChange(configurationInternal, List.of("isDeclarableAgainstByExtension", "isDeclarableByExtension"))) {
+            if (configurationInternalIsDeclarableByExtension(configurationInternal)) {
                 filteredConfigurations.add(configuration);
             }
         }

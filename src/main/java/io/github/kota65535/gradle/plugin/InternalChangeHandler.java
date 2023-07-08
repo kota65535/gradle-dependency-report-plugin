@@ -2,7 +2,13 @@ package io.github.kota65535.gradle.plugin;
 
 
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.UnresolvableConfigurationResult;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 public class InternalChangeHandler {
 
@@ -24,8 +30,9 @@ public class InternalChangeHandler {
         throw new IllegalStateException("createUnresolvableConfigurationResult failed");
     }
 
-    static public <R, T> R handleMethodNameChange(T object, List<String> methodNames) {
+    static public boolean configurationInternalIsDeclarableByExtension(ConfigurationInternal configuration) {
         Method method = null;
+        List<String> methodNames = List.of("isDeclarableAgainstByExtension", "isDeclarableByExtension");
         for (String name: methodNames) {
             try {
                 method = ConfigurationInternal.class.getMethod(name);
@@ -34,10 +41,10 @@ public class InternalChangeHandler {
             }
         }
         if (method == null) {
-            throw new NoSuchElementException("method not found %s".formatted(methodNames));
+            throw new NoSuchElementException("None of method found %s".formatted(methodNames));
         }
         try {
-            return (R) method.invoke(object);
+            return (boolean) method.invoke(configuration);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new IllegalArgumentException("failed to call method %s".formatted(method.getName()));
         }
