@@ -68,7 +68,7 @@ class DependencyReportPluginTest extends Specification {
                 .build()
 
         then:
-        def outputFile = new File("${testProjectDir.absolutePath}/build/reports/project/dependencies.json")
+        def outputFile = new File("${testProjectDir.absolutePath}/build/a.json")
         assert outputFile.exists()
         result.output.contains("See the report at:")
         result.task(":${DependencyReportPlugin.JSON_DEPENDENCY_REPORT}").outcome == TaskOutcome.SUCCESS
