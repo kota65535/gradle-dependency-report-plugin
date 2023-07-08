@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - main
+      - v1
     paths-ignore:
       - README.md
   pull_request:
