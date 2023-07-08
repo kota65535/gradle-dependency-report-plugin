@@ -5,24 +5,19 @@ plugins {
 }
 
 group = 'io.github.kota65535.gradle.plugin'
-version = "0.1.1-SNAPSHOT"
+version = "0.2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation 'com.google.guava:guava:32.1.1-jre'
     testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
 }
 
 test {
     useJUnitPlatform()
-}
-
-pluginBundle {
-    website = 'https://github.com/kota65535/gradle-dependency-report-plugin'
-    vcsUrl = 'https://github.com/kota65535/gradle-dependency-report-plugin'
-    tags = ['dependencies', 'json']
 }
 
 gradlePlugin {
@@ -37,3 +32,7 @@ gradlePlugin {
 }
 
 apply from: "release.gradle"
+
+javadoc {
+    enabled = false
+}
