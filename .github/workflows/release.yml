@@ -23,7 +23,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup tools
@@ -52,7 +52,7 @@ jobs:
       GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare-release.outputs.commit }}
       - name: Setup tools
@@ -69,7 +69,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
